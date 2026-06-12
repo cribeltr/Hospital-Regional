@@ -1,65 +1,67 @@
-# CLAUDE.md — GEB · Gestión de Equipos Biomédicos Críticos (HRT 2026)
+# CLAUDE.md — Sistema MP 2026 · Mantención de Equipos Médicos (HRT)
 
 ## Qué es este proyecto
 
-GEB es una aplicación de un solo archivo `index.html` que usa el encargado
-de la unidad de equipos médicos del hospital para gestionar el mantenimiento
-preventivo (MP) anual de 966 equipos biomédicos críticos, además de
-correctivos, documentación firmada (anexos oficiales) y tareas pendientes.
-El Excel institucional sigue siendo el registro oficial final; GEB aporta la
-trazabilidad y el control diario que el Excel no entrega.
+Sistema MP 2026 es una aplicación de un solo archivo `Sistema_MP_2026.html`
+que usa el encargado de la unidad de equipos médicos del hospital para
+gestionar la mantención preventiva (MP) anual de 966 equipos biomédicos
+(~2.350 eventos MP) y el ciclo correctivo completo. Es un **registro
+paralelo no oficial**: la planilla Excel oficial validada por resolución
+(`Programacion_MP_2026.xlsm`, hoja `Registro_MP-2026`) sigue siendo el
+registro oficial final; el programa captura lo que ella no registra (fecha
+real, ejecutor, estado operativo, trazabilidad) y gestiona las diferencias
+sin ocultarlas. Detalle de uso en `README.md`; historia y reglas acumuladas
+en `HISTORIAL.md`.
+
+**Decisión 12-06-2026:** el usuario eligió continuar este programa y NO el
+anterior ("GEB", index.html de 11 pestañas, descrito por versiones previas
+de este archivo). Si aparecen referencias a GEB, son herencia: este archivo
+manda.
 
 ## Contrato de trabajo con el usuario
 
 - El usuario NO es programador. Él conoce su trabajo y sus necesidades;
   Claude aporta el criterio técnico (programación, diseño web, UX/UI,
   gestión de proyectos y planificación). La decisión final siempre es suya.
-- Responder SIEMPRE en español. Probar con sus respaldos reales antes de
-  entregar. Tras cada cambio: commit + push (inicializar git si no existe)
-  + entregarle `index.html`.
+- Responder SIEMPRE en español. Probar con sus respaldos reales (carpeta
+  `respaldos/`) antes de entregar. Tras cada cambio: commit + push +
+  entregarle `Sistema_MP_2026.html`.
 - **Él nutre, Claude razona.** El usuario entrega ideas y ejemplos de cómo lo
   haría a mano ("en Excel yo haría…"): eso es modelo mental para entender la
-  lógica, NO un encargo literal. La solución se propone DENTRO de GEB; no
-  generar entregables paralelos (planillas externas) cuando lo pedido debe
-  vivir en el programa. Entender y preguntar antes de actuar.
+  lógica, NO un encargo literal. La solución se propone DENTRO del programa;
+  no generar entregables paralelos cuando lo pedido debe vivir en él.
+  Entender y preguntar antes de actuar.
 
 ## Flujo real del proceso (levantado el 11-06-2026 — reglas firmes)
 
 - **El trabajo es una cadena de ciclos**: MP programada → ejecución o causal
-  → papel → firma → carpeta física → recién al final el Excel oficial. El
-  desorden del usuario = ciclos abiertos invisibles. Toda vista nueva debe
-  mostrar el ciclo y su siguiente paso, no solo datos por pestaña.
-- **Orden de registro**: 1º GEB con el detalle completo (fecha, ejecutor, qué
-  se hizo — la trazabilidad que antes no existía). 2º papel firmado y
-  archivado en la carpeta del equipo. 3º RECIÉN AHÍ el código de resultado al
-  Excel oficial. Celda vacía en el Excel = ciclo abierto. La lista "falta
-  traspasar al Excel" debería ofrecer solo lo que ya tiene papel archivado.
-- **Rojo = papel pendiente**: causal registrada cuyo documento no está
-  "archivado" en `S.docflow`. El semáforo debe verse donde se revisa.
-- **Reprogramación implícita (detectable)**: resultado vacío + ejecución en un
-  mes posterior ⇒ hubo reprogramación de facto → falta registrar la causal e
-  imprimir su Anexo 3. GEB debe marcarlo solo.
+  → papel → firma → carpeta física del equipo → recién al final el Excel
+  oficial. El desorden = ciclos abiertos invisibles. Toda vista nueva debe
+  mostrar el ciclo y su siguiente paso, no solo datos sueltos.
+- **Orden de registro**: 1º el programa con el detalle completo (fecha,
+  ejecutor, qué se hizo). 2º papel firmado y archivado en la carpeta del
+  equipo. 3º RECIÉN AHÍ el resultado al Excel oficial. Si un dato está en el
+  Excel es porque su documentación ya está archivada (por eso se descartó un
+  estado intermedio "archivado": sería redundante). Celda vacía en el Excel
+  = ciclo abierto; la cola de oficialización son las **Δ discrepancias**.
+- **Reprogramación implícita**: resultado vacío + ejecución en mes posterior
+  ⇒ reprogramación de facto. El programa ya la detecta (evento `R*` no
+  oficial en el mes real + marca 📄 documento pendiente).
 - **Revisión caso a caso, papeleo en lote**: la causal la decide SIEMPRE el
-  usuario, caso a caso, con la evidencia al lado (correctivo abierto, estado,
-  préstamo, familia externa, fichas, ejecución posterior). Solo el papeleo se
-  agrupa: llenar todos los vacíos → filtrar rojos → por servicio → imprimir
-  en lote → repartir. La impresión es la última etapa, nunca de a uno.
+  usuario, caso a caso, con la evidencia al lado. Solo el papeleo se agrupa
+  (imprimir en lote, repartir). La impresión es la última etapa, nunca de a
+  uno.
+- **Los 3 papeles** (procedimiento oficial PR-DC-0113/EQ2.1 v10): protocolo
+  MP (Anexo 2 por familia; firma técnico ejecutor + jefe SEC + VºB
+  servicio), reporte de reprogramación (Anexo 3; jefe SEC + supervisora; el
+  formato oficial admite VARIOS equipos del mismo servicio), retiro de
+  circulación (Anexo 4; jefe SEC + supervisora). El programa aún NO imprime
+  anexos. **Pregunta abierta antes de construir impresión**: ¿el archivo en
+  carpetas individuales exige hoja por equipo o sirven copias del Anexo 3
+  grupal?
 - **Portador del papel**: cada documento impreso lleva un portador asignable
-  (por defecto quien tenía asignada/ejecutó esa MP; a veces el usuario).
-  "Hoy" debe recordar qué firmas verificar y a quién.
-- **Los 3 papeles** (procedimiento oficial PR-DC-0113/EQ2.1 v10, PDF en la
-  carpeta del proyecto): protocolo MP (Anexo 2 por familia; firma técnico
-  ejecutor + jefe SEC + VºB servicio), reporte de reprogramación (Anexo 3;
-  jefe SEC + supervisora; el formato oficial admite VARIOS equipos del mismo
-  servicio, cada fila con su causal), retiro de circulación (Anexo 4; jefe
-  SEC + supervisora). `formReprog` hoy imprime una hoja por equipo.
-  **Pregunta abierta antes de tocar impresión**: ¿el archivo en carpetas
-  individuales exige hoja por equipo o sirven copias del Anexo 3 grupal?
-- **Próxima fase propuesta (espera OK)**: vista **"Revisión y cierre"** en
-  Plan MP — todos los vacíos de meses pasados en una lista única, evidencia
-  automática, causal asignable en línea, semáforo rojo de papel; conectada a
-  Documentos (lote y estados) y al traspaso a Excel condicionado a papel
-  archivado. Después: Anexo 3 agrupado por servicio + portador.
+  (por defecto quien ejecutó esa MP). Al construir papeleo, recordar qué
+  firmas verificar y a quién.
 
 ## Método de trabajo (cómo avanzamos sin retroceder)
 
@@ -67,8 +69,8 @@ trazabilidad y el control diario que el Excel no entrega.
   `PLAN.md` (por decidir / pendiente / en curso / hecha). Una fase a la vez:
   la siguiente no se abre sin que el usuario valide la anterior.
 - **Anti-regresión.** Lo que ya funciona es intocable salvo acuerdo explícito.
-  Antes de dar una fase por terminada: probar con los respaldos JSON reales y
-  verificar que las pestañas y flujos existentes siguen funcionando. Si algo
+  Antes de dar una fase por terminada: probar con los respaldos reales y
+  verificar que las vistas y flujos existentes siguen funcionando. Si algo
   se rompe, revertirlo es la prioridad número uno. Commits pequeños con
   mensaje claro.
 - **Entender antes de ejecutar.** Si el "para qué" de una petición no es
@@ -88,23 +90,22 @@ trazabilidad y el control diario que el Excel no entrega.
 
 ## Arquitectura (decisiones firmes)
 
-- Un solo archivo `index.html` (~425 KB), JavaScript vanilla, sin
-  dependencias externas. Nada de frameworks, builds ni librerías salvo
-  acuerdo explícito con el usuario.
-- Persistencia en `localStorage` (clave `geb_hrt_v3`), con exportación e
-  importación de respaldos `.json` desde la pestaña Datos.
-- 11 pestañas: Hoy, Panel, Inventario, Plan MP, Asignación, Documentos,
-  Informes, Correctivos, Reportes, Pendientes y Datos (~183 funciones JS).
-
-## Primera sesión con este archivo (hacer UNA sola vez)
-
-1. Si en la carpeta existe `CLAUDE_anterior.md` (el CLAUDE.md previo del
-   proyecto), leerlo y traspasar aquí toda regla o decisión de arquitectura
-   que no esté ya en este archivo. Avisar al usuario qué se rescató y
-   eliminarlo.
-2. Leer `index.html`, `HISTORIAL.md` y `README.md`, y verificar que lo
-   descrito aquí coincide con el código real. Si algo difiere, corregir este
-   archivo, no el código.
-3. Resumir en máximo 10 líneas, sin tecnicismos, en qué está el proyecto y
-   cuál es la fase propuesta en `PLAN.md`. Esperar el OK del usuario antes de
-   tocar cualquier cosa.
+- Un solo archivo `Sistema_MP_2026.html` (~360 KB), JavaScript vanilla,
+  3 vistas (Equipos, Plan MP, Correctivo), ~65 funciones. Los datos de la
+  planilla van embebidos en el archivo (`const DATA`) y se actualizan
+  importando el `.xlsm` del día.
+- **Única dependencia externa**: SheetJS 0.18.5 desde CDN para leer/escribir
+  Excel (requiere internet; embeberla está en PLAN.md). Google Fonts solo
+  estética. Nada más sin acuerdo explícito con el usuario.
+- **Persistencia**: dentro de claude.ai usa `window.storage` (API del
+  entorno); como archivo local usa `localStorage` mediante un shim con la
+  misma interfaz (primeras líneas del script). Claves: `datos-mp-2026`,
+  `registros-mp-2026`, `virt-mp-2026`, `casos-mp-2026`, `bitacora-mp-2026`.
+  Ambos almacenes NO se comunican entre sí: el puente entre entornos es la
+  exportación/importación de respaldos Excel (hábito clave del README).
+- Identificación de registros anclada a N° inventario/serie + mes para
+  sobrevivir a las importaciones diarias de la planilla. Estado del equipo
+  siempre derivado, nunca manual.
+- Repositorio GitHub `cribeltr/Hospital-Regional`; respaldos reales del
+  usuario en `respaldos/` (planilla oficial + exportaciones), usarlos para
+  probar.

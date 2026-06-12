@@ -1,36 +1,44 @@
-# PLAN.md — Fases del proyecto GEB
+# PLAN.md — Fases del proyecto Sistema MP 2026
 
 Estados: **por decidir → pendiente → en curso → hecha** (o descartada).
 Una fase a la vez; se cierra solo con validación del usuario.
 Al cerrar una fase: actualizar este archivo, anotar decisiones nuevas en
 `CLAUDE.md` y hacer commit.
 
-## Propuesta esperando OK del usuario
+## En curso (esperando validación del usuario)
 
-1. **Vista "Revisión y cierre" (Plan MP)**: todos los resultados vacíos de
-   meses pasados en una lista única, con evidencia automática (correctivo
-   abierto, estado, préstamo, familia externa, ejecución posterior =
-   reprogramación implícita), causal asignable en línea y semáforo rojo de
-   papel sin archivar. Conecta con Documentos y condiciona el "traspasar al
-   Excel" a papel archivado. *Ver detalle en CLAUDE.md → Flujo real.*
+1. **Persistencia local (v17)**: el programa guardaba solo dentro de
+   claude.ai; ahora también guarda en el navegador al usarlo como archivo
+   local. Probar: registrar una MP, cerrar el navegador, reabrir el archivo
+   y verificar que el registro sigue.
+
+## Propuestas esperando OK (hoja de ruta heredada del README)
+
+2. **Fase 3a — Confiabilidad**: hoja "Para actualizar Excel" en la
+   exportación + aviso de respaldo al cerrar la jornada.
+3. **Fase 4 — Informes**: cumplimiento mensual por servicio/ejecutor para
+   jefatura.
+4. **Fase 3c — Pendientes**: por definir con el usuario.
 
 ## Por decidir (preguntar el "para qué" antes de partir)
 
-2. **Anexo 3 agrupado por servicio + portador del papel** (después de la
-   fase 1; requiere responder: ¿hoja por equipo o copias por carpeta?).
-3. **Poda de pestañas**: revisar cuáles usa de verdad y simplificar.
-4. **Unificar nombre del hospital** (GEB vs reportes técnicos) — confirmar.
-5. Gráfico de evolución mensual de cumplimiento.
-6. % operativo por familia (disponibilidad de equipos).
-7. Imprimir los protocolos del mes por técnico desde el Plan MP.
-8. Recordatorio de respaldo semanal (.json).
-9. Acciones en lote (registrar/asignar varios equipos a la vez).
-10. Carga masiva de causales desde planilla (si la revisión manual de los
-    144 se hace pesada).
+5. **Papeleo de anexos** (del levantamiento del flujo real 11-06): imprimir
+   protocolo MP (Anexo 2), reporte de reprogramación (Anexo 3 — ¿hoja por
+   equipo o grupal por servicio? pregunta abierta) y retiro (Anexo 4), con
+   portador del papel y semáforo de papel pendiente.
+6. **Embeber la librería de Excel** para que importar/exportar funcione sin
+   internet (el archivo crecería ~1 MB).
+7. % operativo por familia de equipos (disponibilidad).
+8. Imprimir los protocolos del mes por técnico desde Plan MP.
 
 ## Hechas
 
-- 11-06-2026 · Levantamiento del flujo real del proceso interno
-  (documentado en CLAUDE.md): orden GEB → carpeta → Excel, rojo = papel
-  pendiente, reprogramación implícita, portador, los 3 papeles.
-- Todo lo construido hasta el 11-06-2026: ver `HISTORIAL.md`.
+- 12-06-2026 · **Decisión de rumbo**: se continúa con Sistema MP 2026; GEB
+  (el programa anterior de 11 pestañas) queda congelado. Repositorio GitHub
+  creado con programa, documentación y respaldos reales (`respaldos/`).
+- 11-06-2026 · v1–v16: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ (pendiente
+  validación con casos reales) · Fase 3b Ficha técnica ✔ · documentación
+  (README, HISTORIAL). Ver `HISTORIAL.md`.
+- 11-06-2026 · Levantamiento del flujo real del proceso interno (documentado
+  en `CLAUDE.md`): ciclos, orden programa → carpeta → Excel, reprogramación
+  implícita, los 3 papeles, portador.

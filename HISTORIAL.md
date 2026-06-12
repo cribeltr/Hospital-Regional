@@ -67,6 +67,10 @@ Corte de fases acordado: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ · Fase 
 ## v16 — Documentación
 **Solicitud:** generar HISTORIAL.md y README.md (este documento y la documentación de uso).
 
+## v17 — Persistencia local (12-06-2026)
+**Hallazgo:** el guardado usaba la API de almacenamiento de claude.ai (`window.storage`), que no existe al abrir el archivo en un navegador normal: fuera de claude.ai nada persistía entre sesiones y todo dependía de exportar el backup.
+**Implementado:** respaldo automático con `localStorage` cuando `window.storage` no existe (misma interfaz, mismas claves `*-mp-2026`). Importación/exportación Excel intactas. Los almacenes de claude.ai y del navegador local no se comunican: el puente sigue siendo el backup Excel.
+
 ---
 
 ### Reglas acumuladas vigentes
@@ -78,3 +82,4 @@ Corte de fases acordado: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ · Fase 
 6. Discrepancia Δ ≠ Conflicto ⚠; conflicto se resuelve contra la carpeta física.
 7. Estado del equipo: derivado de resultados e hitos; nunca manual.
 8. Backup: dos botones de importación separados (planilla / backup); exportación con Registros MP + Correctivo + Bitácora.
+9. Persistencia: `window.storage` en claude.ai, `localStorage` como archivo local (claves `*-mp-2026`); el backup Excel es el puente entre entornos.
