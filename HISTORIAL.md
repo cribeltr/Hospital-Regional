@@ -71,6 +71,10 @@ Corte de fases acordado: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ · Fase 
 **Hallazgo:** el guardado usaba la API de almacenamiento de claude.ai (`window.storage`), que no existe al abrir el archivo en un navegador normal: fuera de claude.ai nada persistía entre sesiones y todo dependía de exportar el backup.
 **Implementado:** respaldo automático con `localStorage` cuando `window.storage` no existe (misma interfaz, mismas claves `*-mp-2026`). Importación/exportación Excel intactas. Los almacenes de claude.ai y del navegador local no se comunican: el puente sigue siendo el backup Excel.
 
+## v18 — Informe técnico en trato directo (12-06-2026)
+**Solicitud:** si la compra de repuestos es por trato directo, el programa debe solicitar el N° de Informe Técnico.
+**Implementado:** en el hito Compra, al elegir "Trato directo" aparece el campo **N° Informe Técnico** y es obligatorio para guardar; con "Compra ágil" el campo no se muestra ni se arrastra. El número queda en el detalle del hito (caso, ficha técnica y hoja Correctivo del respaldo).
+
 ---
 
 ### Reglas acumuladas vigentes

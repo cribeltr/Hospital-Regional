@@ -229,7 +229,7 @@ function saveVirt(){try{window.storage.set('virt-mp-2026',JSON.stringify(VIRT));
 let CASOS=[], coAlertOnly=false;
 const HITOS_DEF={
  FALLA:{n:'Falla (apertura SIGEM)',campos:[]},
- COMPRA:{n:'Compra de repuestos',campos:[['tipoCompra','Tipo de compra',['Compra ágil','Trato directo (informe técnico)']],['detalle','Detalle / repuestos']]},
+ COMPRA:{n:'Compra de repuestos',campos:[['tipoCompra','Tipo de compra',['Compra ágil','Trato directo (informe técnico)']],['nInforme','N° Informe Técnico'],['detalle','Detalle / repuestos']]},
  OC:{n:'Orden de compra',campos:[['nOrden','N° orden de compra'],['empresa','Empresa']]},
  ENVIO:{n:'Envío a servicio técnico',campos:[['nEnvio','N° de envío'],['empresa','Empresa'],['folio','Folio']]},
  VISITA:{n:'Visita técnica',campos:[['diagnostico','Diagnóstico'],['empresa','Empresa']]},
@@ -901,9 +901,15 @@ function hitoCampos(){
   const tipo=document.getElementById('hTipo').value;
   const box=document.getElementById('hCampos');
   box.innerHTML=HITOS_DEF[tipo].campos.map(([k,n,ops])=>
-    ops?`<label class="fl">${n}</label><select id="hc_${k}">${ops.map(o=>`<option>${o}</option>`).join('')}</select>`
-       :`<label class="fl">${n}</label><input type="text" id="hc_${k}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit">`
+    ops?`<div id="hw_${k}"><label class="fl">${n}</label><select id="hc_${k}" onchange="hitoCondicionales()">${ops.map(o=>`<option>${o}</option>`).join('')}</select></div>`
+       :`<div id="hw_${k}"><label class="fl">${n}</label><input type="text" id="hc_${k}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit"></div>`
   ).join('');
+  hitoCondicionales();
+}
+function hitoCondicionales(){
+  // el trato directo exige informe técnico que lo justifique; la compra ágil no lo lleva
+  const t=document.getElementById('hc_tipoCompra'),w=document.getElementById('hw_nInforme');
+  if(t&&w)w.style.display=t.value.indexOf('Trato directo')===0?'':'none';
 }
 function submitHito(id){
   const c=CASOS.find(x=>x.id===id); if(!c)return;
@@ -914,6 +920,12 @@ function submitHito(id){
   if(!resp){alert('Indica el responsable (todo hito lleva responsable).');return;}
   const datos={};
   HITOS_DEF[tipo].campos.forEach(([k])=>{const el=document.getElementById('hc_'+k);if(el)datos[k]=el.value.trim();});
+  if(tipo==='COMPRA'){
+    if(datos.tipoCompra.indexOf('Trato directo')===0){
+      if(!datos.nInforme){alert('El trato directo requiere el N° del Informe Técnico.');return;}
+      datos.nInforme='Informe técnico N° '+datos.nInforme;
+    }else datos.nInforme='';
+  }
   c.hitos.push({tipo,fecha,resp,datos});
   log('hito',`folio ${c.folio}: ${HITOS_DEF[tipo].n}, ${fecha}, ${resp}${Object.values(datos).filter(Boolean).length?' · '+Object.values(datos).filter(Boolean).join(', '):''}`);
   // 3. ENTREGA: cierre y verificación de MP con causal C2/C3/C4
