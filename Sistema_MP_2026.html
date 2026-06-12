@@ -254,8 +254,31 @@ function ultNovedad(c){
   return f;
 }
 function casoDe(idpart){return CASOS.find(c=>!c.cerrado&&c.eqRef===idpart);}
+function hitoKey(h){return [h.tipo,h.fecha,h.resp,Object.values(h.datos||{}).filter(Boolean).join(' | ')].join('·');}
+function fusionarCaso(c,nc){
+  const have=new Set(c.hitos.map(hitoKey));
+  nc.hitos.forEach(h=>{if(!have.has(hitoKey(h))){c.hitos.push(h);have.add(hitoKey(h));}});
+  c.seg=c.seg||[];
+  const haveS=new Set(c.seg.map(s=>s.fecha+'·'+s.txt));
+  (nc.seg||[]).forEach(s=>{if(!haveS.has(s.fecha+'·'+s.txt)){c.seg.push(s);haveS.add(s.fecha+'·'+s.txt);}});
+  c.cerrado=c.cerrado||nc.cerrado;
+  if(!c.desc&&nc.desc)c.desc=nc.desc;
+  if(!c.ing&&nc.ing)c.ing=nc.ing;
+  if(!c.fecha&&nc.fecha)c.fecha=nc.fecha;
+}
+function fusionarDuplicados(){
+  // un mismo folio SIGEM sobre el mismo equipo es siempre el mismo caso
+  const porClave={},out=[];let fusionados=0;
+  CASOS.forEach(c=>{
+    const k=c.folio+'·'+c.eqRef;
+    if(porClave[k]){fusionarCaso(porClave[k],c);fusionados++;}
+    else{porClave[k]=c;out.push(c);}
+  });
+  if(fusionados){CASOS=out;saveCasos();log('casos duplicados fusionados',`${fusionados} duplicado(s) del mismo folio unidos a su caso original`);}
+}
 async function loadCasos(){
   try{const r=await window.storage.get('casos-mp-2026');if(r&&r.value)CASOS=JSON.parse(r.value);}catch(e){}
+  fusionarDuplicados();
   buildIndex();render();
 }
 function saveCasos(){try{window.storage.set('casos-mp-2026',JSON.stringify(CASOS));}catch(e){}}
@@ -864,10 +887,12 @@ function openCasoDet(id){
      Ingeniero: ${c.ing} · Estado: <span class="tag ${tagClass(est)}">${est}</span> · ${nov} días sin novedad</div>
      ${(!c.cerrado&&nov>20)?`<div class="alerta20">⚠ HOY: Perseguir servicio técnico — ${nov} días sin novedad. Pregunta al ingeniero y registra la respuesta como seguimiento.</div>`:''}
      <div class="tl">${items.map(i=>i.html).join('')}</div>
-     ${c.cerrado?'':`<div class="subbtns">
-       <button onclick="openHito(${c.id})">+ Hito</button>
-       <button onclick="openSeg(${c.id})">+ Seguimiento</button>
-     </div>`}
+     <div class="subbtns">
+       ${c.cerrado?'':`<button onclick="openHito(${c.id})">+ Hito</button>
+       <button onclick="openSeg(${c.id})">+ Seguimiento</button>`}
+       <button onclick="openCasoEdit(${c.id})">Editar caso</button>
+       <button onclick="delCaso(${c.id})" style="color:var(--red)">Eliminar caso</button>
+     </div>
      <div class="macts"><button class="m-cancel" style="flex:1" onclick="closeReg()">Cerrar ventana</button></div>
     </div>
    </div>`;
@@ -956,15 +981,63 @@ function submitHito(id){
         const mesHoy=MESES[new Date().getMonth()];
         const kNew=eqIdPart(e)+'|'+mesHoy;
         const ofic=e.meses[mesHoy]&&e.meses[mesHoy][0];
-        if(!ofic&&!VIRT[kNew]){VIRT[kNew]={origen:causalPend.mes,prog:'R'};saveVirt();}
-        log('pendiente MP al retorno',`${e.equipo} (Inv ${e.inv}): causal ${causalPend.causal} de ${causalPend.mes} sin ejecutar → evento R creado en ${mesHoy}, límite hoy`);
-        alert(`⚠ Este equipo tiene una MP con causal ${causalPend.causal} (${causalPend.mes}) sin ejecutar.\nEjecutar MP de inmediato al retorno: se creó un evento R en ${mesHoy} en el Plan MP (límite: hoy).`);
+        let aviso;
+        if(ofic)aviso=`ya tiene una MP oficial programada en ${mesHoy}: ejecutarla de inmediato`;
+        else if(VIRT[kNew])aviso=`ya existía un evento R* en ${mesHoy} en el Plan MP (límite: hoy)`;
+        else{VIRT[kNew]={origen:causalPend.mes,prog:'R'};saveVirt();aviso=`se creó un evento R* en ${mesHoy} en el Plan MP (límite: hoy)`;}
+        log('pendiente MP al retorno',`${e.equipo} (Inv ${e.inv}): causal ${causalPend.causal} de ${causalPend.mes} sin ejecutar → ${aviso}`);
+        alert(`⚠ Este equipo tiene una MP con causal ${causalPend.causal} (${causalPend.mes}) sin ejecutar.\nEjecutar MP de inmediato al retorno: ${aviso}.\nPara ubicarlo: Plan MP → buscar ${e.inv||e.serie} → mes ${mesHoy}.`);
       }
     }
     log('caso cerrado',`folio ${c.folio}: entrega ${fecha}, equipo operativo`);
   }
   saveCasos();buildIndex();render();
   openCasoDet(id);
+}
+
+// ---- editar y eliminar caso ----
+function openCasoEdit(id){
+  const c=CASOS.find(x=>x.id===id); if(!c)return;
+  const e=eqDe(c.eqRef)||{};
+  const ings=EJECUTORES.includes(c.ing)?EJECUTORES:[c.ing,...EJECUTORES];
+  document.getElementById('modal').innerHTML=`
+   <div class="overlay" onclick="if(event.target===this)openCasoDet(${id})">
+    <div class="modal">
+     <h2>Editar caso</h2>
+     <div class="msub">${e.equipo||c.eqRef} · Inv. ${e.inv||'—'} · los hitos no se editan: la historia del caso se corrige agregando hitos</div>
+     <label class="fl">Folio SIGEM</label><input type="text" id="ceFolio" value="${String(c.folio).replace(/"/g,'&quot;')}" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit">
+     <div class="mrow" style="margin-top:0">
+       <div><label class="fl">Fecha inicio</label><input type="date" id="ceFecha" value="${c.fecha||''}"></div>
+       <div><label class="fl">Ingeniero</label><select id="ceIng">${ings.map(x=>`<option ${c.ing===x?'selected':''}>${x}</option>`).join('')}</select></div>
+     </div>
+     <label class="fl">Descripción de la falla</label>
+     <textarea id="ceDesc">${(c.desc||'').replace(/</g,'&lt;')}</textarea>
+     <div class="macts">
+       <button class="m-cancel" onclick="openCasoDet(${id})">Volver</button>
+       <button class="m-save" onclick="submitCasoEdit(${id})">Guardar cambios</button>
+     </div>
+    </div>
+   </div>`;
+  document.getElementById('modal').style.display='block';
+}
+function submitCasoEdit(id){
+  const c=CASOS.find(x=>x.id===id); if(!c)return;
+  const folio=document.getElementById('ceFolio').value.trim();
+  const fecha=document.getElementById('ceFecha').value;
+  if(!folio){alert('El folio SIGEM no puede quedar vacío.');return;}
+  if(!fecha){alert('Indica la fecha de inicio del caso.');return;}
+  c.folio=folio;c.fecha=fecha;c.ing=document.getElementById('ceIng').value;c.desc=document.getElementById('ceDesc').value.trim();
+  saveCasos();buildIndex();render();
+  log('caso editado',`folio ${c.folio}: datos del caso actualizados`);
+  openCasoDet(id);
+}
+function delCaso(id){
+  const c=CASOS.find(x=>x.id===id); if(!c)return;
+  const e=eqDe(c.eqRef)||{};
+  if(!confirm(`¿Eliminar el caso folio ${c.folio} de ${e.equipo||c.eqRef}?\nSe borrarán sus ${c.hitos.length} hito(s) y ${(c.seg||[]).length} seguimiento(s). Esta acción no se puede deshacer.`))return;
+  CASOS=CASOS.filter(x=>x.id!==id);
+  saveCasos();buildIndex();render();closeReg();
+  log('caso eliminado',`folio ${c.folio}: ${e.equipo||c.eqRef} (tenía ${c.hitos.length} hitos)`);
 }
 
 // ---- supervisión: bitácora de seguimiento ----
@@ -1061,7 +1134,6 @@ function importBackup(wb,fname){
     const m=fecha.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
     if(m)fecha=`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
     const key=(inv||serie||('id'+id))+'|'+mes;
-    if(REG[key])actualizados++;else nuevos++;
     const e2={fecha,ej:String(r['Ejecutor']||'').trim(),oper:(v=>v.startsWith('s')?true:v.startsWith('n')?false:null)(String(r['Equipo operativo']||'').trim().toLowerCase()),obs:String(r['Observaciones']||'').trim()};
     const pr=String(r['Programa registrado']||'').trim(); if(['X','R','RA','PM'].includes(pr))e2.prog=pr;
     const rr=String(r['Resultado registrado']||'').trim(); if(RESULTADOS.includes(rr))e2.res=rr;
@@ -1069,7 +1141,10 @@ function importBackup(wb,fname){
     if(String(r['Conflicto resuelto']||'').trim().toLowerCase().startsWith('s'))e2.resuelto=true;
     if(String(r['Evento no oficial']||'').trim().toLowerCase().startsWith('s')){
       VIRT[key]={origen:String(r['Mes programado original']||'').trim(),prog:e2.prog||'R'};
+      // evento no oficial aún sin registro: basta recrear el evento, sin inventar un registro vacío
+      if(!fecha&&!e2.ej&&!e2.res&&!e2.obs&&e2.oper===null&&!e2.pend)return;
     }
+    if(REG[key])actualizados++;else nuevos++;
     REG[key]=e2;
   });
   if(wb.Sheets['Bitácora']){
@@ -1096,9 +1171,11 @@ function importBackup(wb,fname){
       }
     });
     Object.values(porId).forEach(nc=>{
-      const i=CASOS.findIndex(x=>x.id===nc.id);
-      if(i>=0)CASOS[i]=nc;else CASOS.push(nc);
+      // el ID numérico se corrompe al viajar por Excel: el folio + equipo identifican el caso
+      const i=CASOS.findIndex(x=>x.id===nc.id||(x.folio===nc.folio&&x.eqRef===nc.eqRef));
+      if(i<0)CASOS.push(nc);else fusionarCaso(CASOS[i],nc);
     });
+    fusionarDuplicados();
     saveCasos();
   }
   saveVirt();buildIndex();
@@ -1118,8 +1195,8 @@ async function loadData(){
 function exportRegistros(){
   const filas=[];
   EVENTOS.forEach(ev=>{
-    const g=REG[evKey(ev)]; if(!g)return;
-    filas.push({ID:ev.eq.id,'N° Carpeta':ev.eq.carpeta,'N° Inventario':ev.eq.inv,Equipo:ev.eq.equipo,Marca:ev.eq.marca,Modelo:ev.eq.modelo,Serie:ev.eq.serie,Servicio:ev.eq.servicio,Mes:ev.mes,'Evento no oficial':ev.virt?'Sí':'No','Mes programado original':ev.virt?(ev.origen||''):'','Tipo de evento':ev.virt?'MP Reprogramada':(TIPO[ev.p]||'Mantención preventiva'),Programa:ev.p,'Resultado planilla':ev.r,'Programa registrado':g.prog||ev.p,'Resultado registrado':g.res||'Si','Fecha ejecución':g.fecha,Ejecutor:g.ej,'Equipo operativo':g.oper===true?'Sí':g.oper===false?'No':'','Documento pendiente':g.pend?'Sí':'No','Conflicto resuelto':g.resuelto?'Sí':'No',Observaciones:g.obs||''});
+    const g=REG[evKey(ev)]; if(!g&&!ev.virt)return; // viajan los registrados y también los eventos no oficiales aún sin registro
+    filas.push({ID:ev.eq.id,'N° Carpeta':ev.eq.carpeta,'N° Inventario':ev.eq.inv,Equipo:ev.eq.equipo,Marca:ev.eq.marca,Modelo:ev.eq.modelo,Serie:ev.eq.serie,Servicio:ev.eq.servicio,Mes:ev.mes,'Evento no oficial':ev.virt?'Sí':'No','Mes programado original':ev.virt?(ev.origen||''):'','Tipo de evento':ev.virt?'MP Reprogramada':(TIPO[ev.p]||'Mantención preventiva'),Programa:ev.p,'Resultado planilla':ev.r,'Programa registrado':g?(g.prog||ev.p):'','Resultado registrado':g?(g.res||'Si'):'','Fecha ejecución':g?g.fecha:'',Ejecutor:g?g.ej:'','Equipo operativo':g&&g.oper===true?'Sí':g&&g.oper===false?'No':'','Documento pendiente':g&&g.pend?'Sí':'No','Conflicto resuelto':g&&g.resuelto?'Sí':'No',Observaciones:(g&&g.obs)||''});
   });
   if(!filas.length&&!BITACORA.length){alert('Aún no hay registros para exportar.');return;}
   const wb=XLSX.utils.book_new();
@@ -1129,10 +1206,10 @@ function exportRegistros(){
     CASOS.forEach(c=>{
       const e=eqDe(c.eqRef)||{};
       hitosOrden(c).forEach(hi=>{
-        cf.push({'Caso ID':c.id,'N° Inventario':e.inv||'','Serie':e.serie||'','Equipo':e.equipo||'','Folio SIGEM':c.folio,'Ingeniero':c.ing,'Fecha inicio':c.fecha,'Descripción':c.desc||'','Cerrado':c.cerrado?'Sí':'No','Registro':'HITO','Tipo':hi.tipo,'Fecha':hi.fecha,'Responsable':hi.resp||'','Detalle':Object.values(hi.datos||{}).filter(Boolean).join(' | ')});
+        cf.push({'Caso ID':String(c.id),'N° Inventario':e.inv||'','Serie':e.serie||'','Equipo':e.equipo||'','Folio SIGEM':c.folio,'Ingeniero':c.ing,'Fecha inicio':c.fecha,'Descripción':c.desc||'','Cerrado':c.cerrado?'Sí':'No','Registro':'HITO','Tipo':hi.tipo,'Fecha':hi.fecha,'Responsable':hi.resp||'','Detalle':Object.values(hi.datos||{}).filter(Boolean).join(' | ')});
       });
       (c.seg||[]).forEach(sg=>{
-        cf.push({'Caso ID':c.id,'N° Inventario':e.inv||'','Serie':e.serie||'','Equipo':e.equipo||'','Folio SIGEM':c.folio,'Ingeniero':c.ing,'Fecha inicio':c.fecha,'Descripción':c.desc||'','Cerrado':c.cerrado?'Sí':'No','Registro':'SEGUIMIENTO','Tipo':'','Fecha':sg.fecha,'Responsable':'','Detalle':sg.txt});
+        cf.push({'Caso ID':String(c.id),'N° Inventario':e.inv||'','Serie':e.serie||'','Equipo':e.equipo||'','Folio SIGEM':c.folio,'Ingeniero':c.ing,'Fecha inicio':c.fecha,'Descripción':c.desc||'','Cerrado':c.cerrado?'Sí':'No','Registro':'SEGUIMIENTO','Tipo':'','Fecha':sg.fecha,'Responsable':'','Detalle':sg.txt});
       });
     });
     XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(cf),'Correctivo');

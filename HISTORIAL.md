@@ -79,6 +79,11 @@ Corte de fases acordado: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ · Fase 
 **Solicitud:** que el botón de grabación grabe más cosas.
 **Implementado:** la bitácora ahora graba además (1) la consulta de casos correctivos (folio, equipo, estado y días sin novedad, solo al abrirlos desde la tabla), (2) el inicio de cada sesión con su entorno (archivo local o claude.ai), y (3) la vista Correctivo correctamente identificada en búsquedas y cambios de vista (antes se anotaba como "Plan MP"). Lo ya grabado se mantiene igual.
 
+## v20 — Casos: editar, eliminar y fin de los duplicados (12-06-2026)
+**Reporte del usuario:** no había opción de editar o borrar un caso; al importar el respaldo el caso se duplicó; el evento R creado al cerrar el caso no aparecía.
+**Causas encontradas:** (1) el ID del caso viajaba como número y Excel lo corrompe (notación científica), por lo que al importar no se reconocía el caso y se creaba de nuevo; (2) los eventos no oficiales R\* sin registro no se incluían en la exportación, así que se perdían al cambiar de entorno.
+**Implementado:** botones **Editar caso** (folio, fecha, ingeniero, descripción) y **Eliminar caso** (con confirmación) dentro del detalle del caso; al importar, los casos se identifican por folio + equipo y se **fusionan sin duplicar** (hitos y seguimientos incluidos); los duplicados ya existentes se fusionan solos al abrir el programa; los eventos R\* sin registro ahora **viajan en el respaldo**; el aviso al cerrar un caso ahora dice exactamente qué pasó con la MP pendiente (evento creado, ya existente o MP oficial ya programada) y dónde ubicarla.
+
 ---
 
 ### Reglas acumuladas vigentes
@@ -91,3 +96,4 @@ Corte de fases acordado: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ · Fase 
 7. Estado del equipo: derivado de resultados e hitos; nunca manual.
 8. Backup: dos botones de importación separados (planilla / backup); exportación con Registros MP + Correctivo + Bitácora.
 9. Persistencia: `window.storage` en claude.ai, `localStorage` como archivo local (claves `*-mp-2026`); el backup Excel es el puente entre entornos.
+10. Identidad de un caso correctivo: folio SIGEM + equipo. Al importar se fusiona, nunca se duplica; los eventos no oficiales viajan en el respaldo aunque no tengan registro.

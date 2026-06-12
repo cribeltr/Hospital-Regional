@@ -60,7 +60,7 @@ Todos los indicadores son clickeables y filtran la vista correspondiente.
 
 - **⬆ Planilla .xlsm**: carga la planilla oficial diaria. Los registros propios se conservan (anclados a inventario/serie + mes).
 - **⬆ Backup registros**: restaura un Excel exportado previamente (registros, eventos no oficiales, casos correctivos y bitácora, sin duplicar).
-- **⬇ Exportar registros**: genera el Excel de respaldo con hojas **Registros MP**, **Correctivo** y **Bitácora**.
+- **⬇ Exportar registros**: genera el Excel de respaldo con hojas **Registros MP** (incluye los eventos no oficiales aunque aún no tengan registro), **Correctivo** y **Bitácora**.
 - **● REC**: graba la actividad de uso (búsquedas, filtros, registros, importaciones) en una bitácora persistente, incluida en la exportación, para análisis y mejora del programa.
 
 > **Hábito clave:** exportar el backup al terminar cada jornada. Al abrir una versión nueva del programa o cambiar de equipo/navegador: importar primero el backup y luego la planilla del día.
