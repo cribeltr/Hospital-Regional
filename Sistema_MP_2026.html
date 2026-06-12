@@ -184,7 +184,7 @@ tbody tr:hover{background:#F6FAF9}
 <script>
 // ---- persistencia: claude.ai expone window.storage; como archivo local se usa localStorage con la misma interfaz ----
 if(!window.storage){
-  window.storage={
+  window.storage={__local:true,
     async get(k){const v=localStorage.getItem(k);return v==null?null:{key:k,value:v};},
     async set(k,v){localStorage.setItem(k,String(v));return{key:k,value:String(v)};}
   };
@@ -516,9 +516,10 @@ function fApply(){
 function closePanel(){document.getElementById('fpanel').style.display='none';}
 document.addEventListener('click',e=>{if(!e.target.closest('#fpanel')&&!e.target.closest('.fbtn'))closePanel();});
 
+const VISTA_N={eq:'Equipos',pl:'Plan MP',co:'Correctivo'};
 function setView(v){
   view=v;
-  log('cambio de vista',v==='eq'?'Equipos':'Plan MP');
+  log('cambio de vista',VISTA_N[v]);
   document.getElementById('tabEq').classList.toggle('on',v==='eq');
   document.getElementById('tabPl').classList.toggle('on',v==='pl');
   document.getElementById('tabCo').classList.toggle('on',v==='co');
@@ -842,6 +843,8 @@ function submitFalla(idpart){
 function openCasoDet(id){
   const c=CASOS.find(x=>x.id===id); if(!c)return;
   const e=eqDe(c.eqRef)||{};
+  // se graba solo la apertura desde la tabla: al volver de un sub-modal el modal ya está visible
+  if(document.getElementById('modal').style.display!=='block')log('caso consultado',`folio ${c.folio}: ${e.equipo||c.eqRef}${e.inv?' (Inv '+e.inv+')':''} — ${c.cerrado?'cerrado':casoEstado(c)}, ${diasDesde(ultNovedad(c))||0} días sin novedad`);
   const items=[];
   hitosOrden(c).forEach(hi=>{
     const d=Object.entries(hi.datos||{}).filter(([k,v])=>v).map(([k,v])=>v).join(' · ');
@@ -1146,6 +1149,7 @@ let RECON=false, BITACORA=[];
 async function loadBitacora(){
   try{const r=await window.storage.get('bitacora-mp-2026');if(r&&r.value){const d=JSON.parse(r.value);RECON=d.on;BITACORA=d.log||[];}}catch(e){}
   document.getElementById('btnRec').classList.toggle('on',RECON);
+  log('sesión iniciada',window.storage.__local?'archivo local (este computador)':'claude.ai');
 }
 function toggleRec(){
   RECON=!RECON;
@@ -1167,7 +1171,7 @@ function saveBitacora(){
 let qTimer=null;
 document.getElementById('q').addEventListener('input',e=>{
   clearTimeout(qTimer);
-  qTimer=setTimeout(()=>{if(e.target.value.trim())log('búsqueda',`"${e.target.value.trim()}" en vista ${view==='eq'?'Equipos':'Plan MP'}`);},1200);
+  qTimer=setTimeout(()=>{if(e.target.value.trim())log('búsqueda',`"${e.target.value.trim()}" en vista ${VISTA_N[view]}`);},1200);
 });
 
 render();

@@ -75,6 +75,10 @@ Corte de fases acordado: Fase 1 Preventivo ✔ · Fase 2 Correctivo ✔ · Fase 
 **Solicitud:** si la compra de repuestos es por trato directo, el programa debe solicitar el N° de Informe Técnico.
 **Implementado:** en el hito Compra, al elegir "Trato directo" aparece el campo **N° Informe Técnico** y es obligatorio para guardar; con "Compra ágil" el campo no se muestra ni se arrastra. El número queda en el detalle del hito (caso, ficha técnica y hoja Correctivo del respaldo).
 
+## v19 — Grabación ampliada (12-06-2026)
+**Solicitud:** que el botón de grabación grabe más cosas.
+**Implementado:** la bitácora ahora graba además (1) la consulta de casos correctivos (folio, equipo, estado y días sin novedad, solo al abrirlos desde la tabla), (2) el inicio de cada sesión con su entorno (archivo local o claude.ai), y (3) la vista Correctivo correctamente identificada en búsquedas y cambios de vista (antes se anotaba como "Plan MP"). Lo ya grabado se mantiene igual.
+
 ---
 
 ### Reglas acumuladas vigentes
